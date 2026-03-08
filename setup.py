@@ -29,24 +29,25 @@ def get_build_requirements():
 
 
 def build_cpp_library():
-    """Build the C++ library using meson."""
-    print("Building C++ library with meson...")
-    
-    # Check for meson
-    try:
-        subprocess.check_call([sys.executable, "-m", "mesonpy"], capture_output=True)
-        meson_cmd = [sys.executable, "-m", "mesonpy"]
-    except Exception:
-        meson_cmd = ["meson"]
-    
-    # Setup build directory
-    build_dir = Path(__file__).parent / "builddir"
-    if not build_dir.exists():
-        subprocess.check_call(meson_cmd + ["setup", str(build_dir)])
-    
-    # Compile
-    subprocess.check_call(meson_cmd + ["compile", "-C", str(build_dir)])
-    
+    """Build the C++ library using CMake."""
+    print("Building C++ library with CMake...")
+
+    # Source and build directories
+    src_dir = Path(__file__).parent
+    build_dir = src_dir / "builddir"
+
+    # Ensure build directory exists
+    build_dir.mkdir(parents=True, exist_ok=True)
+
+    # Configure with CMake
+    subprocess.check_call(
+        ["cmake", "-S", str(src_dir), "-B", str(build_dir)]
+    )
+
+    # Build with CMake
+    subprocess.check_call(
+        ["cmake", "--build", str(build_dir), "--config", "Release"]
+    )
     print("C++ library built successfully!")
 
 
