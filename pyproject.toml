@@ -126,12 +126,3 @@ archs = ["AMD64"]
 # No repair needed on Windows
 repair-wheel-command = ""
 
-# =============================================================================
-# Container configuration for Docker-based builds
-# =============================================================================
-[tool.cibuildwheel.container-engine]
-# Use Docker for Linux builds
-linux = "docker"
-
-# Docker pull policy
-pull = "missing"
