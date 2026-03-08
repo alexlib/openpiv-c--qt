@@ -36,7 +36,7 @@ def build_cpp_library():
     try:
         subprocess.check_call([sys.executable, "-m", "mesonpy"], capture_output=True)
         meson_cmd = [sys.executable, "-m", "mesonpy"]
-    except:
+    except Exception:
         meson_cmd = ["meson"]
     
     # Setup build directory
