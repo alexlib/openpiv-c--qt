@@ -79,7 +79,7 @@ manylinux-aarch64-image = "manylinux2014"
 
 # Install system dependencies
 before-all = """
-yum install -y cmake3 ninja-build pkgconfig libtiff-devel libjpeg-devel
+yum install -y cmake ninja-build pkgconfig libtiff-devel libjpeg-devel
 """
 
 # Fix library paths for portability
@@ -170,7 +170,7 @@ git push origin v0.2.0
 Add to `before-all`:
 ```toml
 [tool.cibuildwheel.linux]
-before-all = "yum install -y cmake3"
+before-all = "yum install -y cmake"
 ```
 
 ### Wheel not portable (auditwheel fails)
@@ -222,7 +222,7 @@ CIBW_BUILD="cp38-* cp39-* cp310-* cp311-* cp312-*" \
 CIBW_SKIP="*-win32 *-manylinux_i686 pp*" \
 CIBW_MANYLINUX_X86_64_IMAGE="manylinux2014" \
 CIBW_MANYLINUX_AARCH64_IMAGE="manylinux2014" \
-CIBW_BEFORE_ALL_LINUX="yum install -y cmake3 ninja-build pkgconfig libtiff-devel libjpeg-devel zlib-devel" \
+CIBW_BEFORE_ALL_LINUX="yum install -y cmake ninja-build pkgconfig libtiff-devel libjpeg-devel zlib-devel" \
 CIBW_TEST_REQUIRES="pytest numpy" \
 CIBW_TEST_COMMAND="python -c \"import openpiv_cpp_pkg; print('OK')\"" \
 cibuildwheel --output-dir wheelhouse
