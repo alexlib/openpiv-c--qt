@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=61", "wheel", "pybind11>=2.11"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "openpiv-cpp"
+version = "0.2.0"
+authors = [
+    {name = "OpenPIV Contributors", email = "openpiv@openpiv.net"},
+]
+description = "Fast Particle Image Velocimetry (PIV) using C++ backend"
+readme = "README.md"
+license = {text = "GPL-3.0-or-later"}
+requires-python = ">=3.8"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: C++",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Scientific/Engineering :: Image Processing",
+]
+dependencies = [
+    "numpy>=1.20",
+]
+
+[project.optional-dependencies]
+viz = [
+    "matplotlib>=3.5",
+]
+dev = [
+    "pytest>=6.0",
+    "matplotlib>=3.5",
+]
+
+[project.urls]
+Homepage = "https://github.com/OpenPIV/openpiv-c--qt"
+Documentation = "https://github.com/OpenPIV/openpiv-c--qt#readme"
+Repository = "https://github.com/OpenPIV/openpiv-c--qt.git"
+"Bug Tracker" = "https://github.com/OpenPIV/openpiv-c--qt/issues"
+
+[tool.setuptools.packages.find]
+include = ["openpiv_cpp_pkg*"]
