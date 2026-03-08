@@ -63,7 +63,7 @@ build-frontend = "pip"
 
 # Testing configuration
 test-requires = ["pytest", "numpy"]
-test-command = "python -c \"import openpiv_cpp_pkg; r = openpiv_cpp_pkg.piv_process; print('OK')\""
+test-command = "python -c \"from openpiv_cpp_pkg.openpiv_cpp import piv_process; r = piv_process; print('OK')\""
 
 # Don't test by default on cross-compiled builds
 test-skip = ["*-*linux_*aarch64", "*-*macosx_arm64"]
