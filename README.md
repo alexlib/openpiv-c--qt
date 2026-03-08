@@ -254,11 +254,46 @@ These are captured in `<dependency>.wrap`:
     * [x] use SIMD?
     * [x] real -> complex FFT/correlation of real data
   * [ ] direct correlation
+  * image deformation
+    * [ ] Bilinear grid interpolator
+    * [ ] Shifted linear image deformation interpolation
+    * [ ] Polynomial interpolation (Lookup tables-based, so super fast!!)
+    * [ ] Sinc (Slow, but accurate)
   * [x] peak detection
-  * [x] peak fitting
+  * peak fitting
+    * [x] 3 point Gaussian peak fit
+    * [ ] 3 point parabolic peak fit
+    * [ ] 3 point centroid peak fit
+    * [ ] 3x3 least squares Gaussian peak fit (optimized via pseudo-inverse)
+    * [ ] nxn least squares Gaussian peak fit (optimized via pseudo-inverse)
+    * [ ] nxn non-linear Gaussian peak fit (optimized via Levenberg-Marquardt or something similar)
+    * [ ] nxn centroid peak fit (can be used for calibration marker detection)
+  * multi-pass PIV
+    * [ ] Multi-pass iamge deform w/ multi-threading
+    * [ ] Failed correlations can use larger correlation window or imputation
 * image processing
-  * [ ] change image_view to use array of pointers for each row?
-  * [ ] low/high pass filter
+  * filters
+    * [ ] change image_view to use array of pointers for each row?
+    * [ ] Gaussian low-pass filter
+    * [ ] Gaussian high-pass filter
+    * [ ] normalized variance filter
+    * [ ] contrast stretch filter (based on local percentile kernels)
+    * [ ] median filter
+    * [ ] min/max normalization filter
+    * [ ] smoothn from OpenPIV-Python (requires L-BFGS-B impl)
+  * adjustment
+    * [ ] crop (region of interest/ROI)
+    * [ ] skew
+    * [ ] stretch
+    * [ ] translate
+    * [ ] rotate
+    * [ ] flip (x or y axis)
+    * [ ] normalize (0..1 * scaling value)
+    * [ ] deform (Using same deformation algos in PIV image deformation)
+  * masking
+    * [ ] read mask image
+    * [ ] write mask image
+    * [ ] automatically create mask image
 * examples
   * [x] parallel cross-correlate
   * [x] image processing
@@ -276,7 +311,5 @@ These are captured in `<dependency>.wrap`:
   * [ ] ASCII/CSV
   * [ ] gnuplot/pyplot?
   * [ ] tecplot
-* GUI
-  * [ ] Qt?
-  * [ ] websockets/HTML5?
-  * [ ] webassembly + JS/HTML5?
+* interfacing
+  * [ ] nanobind (faster pybind11) for Python interfacing
