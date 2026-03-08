@@ -3,10 +3,11 @@ include LICENSE
 include piv_bindings.cpp
 recursive-include openpiv *.h *.cpp
 recursive-include external/pocketfft *.h *.hpp
-recursive-include subprojects/fmt-9.1.0/include *.h
 include openpiv_cpp_pkg/*.py
 include openpiv_cpp_pkg/*.so
 include openpiv_cpp_pkg/*.pyd
+include openpiv_cpp_pkg/*.dll
+include openpiv_cpp_pkg/*.dylib
 global-exclude *.o
 global-exclude *.a
 global-exclude __pycache__

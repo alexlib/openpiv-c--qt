@@ -10,5 +10,8 @@ test/
 build/
 /subprojects
 /openpiv_cpp.egg-info
-/openpiv_cpp_pkg
 /dist
+/openpiv_cpp_pkg/*.so
+/openpiv_cpp_pkg/*.pyd
+/openpiv_cpp_pkg/*.dll
+/openpiv_cpp_pkg/*.dylib

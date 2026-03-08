@@ -10,7 +10,7 @@ on:
 
 env:
   UV_VERSION: "0.5.x"
-  CIBW_VERSION: "v2.21"
+  CIBW_VERSION: "2.21.3"
 
 jobs:
   # ============================================================================
@@ -69,7 +69,7 @@ jobs:
           platforms: arm64
 
       - name: Build wheels with cibuildwheel
-        uses: pypa/cibuildwheel@v2.21
+        uses: pypa/cibuildwheel@v2.21.3
         env:
           CIBW_BUILD: "cp38-* cp39-* cp310-* cp311-* cp312-* cp313-*"
           CIBW_SKIP: "*-win32 *-manylinux_i686 pp* *-musllinux*"
@@ -79,7 +79,7 @@ jobs:
           CIBW_BEFORE_ALL_LINUX: |
             yum install -y cmake ninja-build pkgconfig libtiff-devel libjpeg-devel zlib-devel
           CIBW_TEST_REQUIRES: "pytest numpy"
-          CIBW_TEST_COMMAND: "python -c \"import openpiv_cpp_pkg; print('OK')\""
+          CIBW_TEST_COMMAND: "python -c \"from openpiv_cpp_pkg import piv_process; print('OK')\""
           CIBW_TEST_SKIP: "*aarch64"
           CIBW_REPAIR_WHEEL_COMMAND_LINUX: "auditwheel repair --plat {plat} -w {dest_dir} {wheel}"
 
@@ -97,13 +97,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-13, macos-14]
-        arch: [x86_64, arm64]
-        exclude:
-          - os: macos-13
-            arch: arm64
-          - os: macos-14
+        include:
+          - os: macos-15-intel
             arch: x86_64
+          - os: macos-14
+            arch: arm64
 
     steps:
       - uses: actions/checkout@v4
@@ -114,7 +112,7 @@ jobs:
         run: brew install cmake ninja pkg-config libtiff
 
       - name: Build wheels with cibuildwheel
-        uses: pypa/cibuildwheel@v2.21
+        uses: pypa/cibuildwheel@v2.21.3
         env:
           CIBW_BUILD: "cp38-* cp39-* cp310-* cp311-* cp312-* cp313-*"
           CIBW_SKIP: "*-win32 *-manylinux* pp*"
@@ -122,7 +120,7 @@ jobs:
           CIBW_ENVIRONMENT_MACOS: "MACOSX_DEPLOYMENT_TARGET=10.15"
           CIBW_BEFORE_ALL_MACOS: "brew install cmake ninja pkg-config libtiff"
           CIBW_TEST_REQUIRES: "pytest numpy"
-          CIBW_TEST_COMMAND: "python -c \"import openpiv_cpp_pkg; print('OK')\""
+          CIBW_TEST_COMMAND: "python -c \"from openpiv_cpp_pkg import piv_process; print('OK')\""
           CIBW_REPAIR_WHEEL_COMMAND_MACOS: "delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v {wheel}"
 
       - uses: actions/upload-artifact@v4
@@ -150,14 +148,14 @@ jobs:
           refreshenv
 
       - name: Build wheels with cibuildwheel
-        uses: pypa/cibuildwheel@v2.21
+        uses: pypa/cibuildwheel@v2.21.3
         env:
           CIBW_BUILD: "cp38-* cp39-* cp310-* cp311-* cp312-* cp313-*"
           CIBW_SKIP: "*-win32 *-manylinux* pp*"
           CIBW_ARCHS_WINDOWS: "AMD64"
           CIBW_BEFORE_ALL_WINDOWS: "choco install cmake ninja pkgconfiglite libtiff -y --no-progress"
           CIBW_TEST_REQUIRES: "pytest numpy"
-          CIBW_TEST_COMMAND: "python -c \"import openpiv_cpp_pkg; print('OK')\""
+          CIBW_TEST_COMMAND: "python -c \"from openpiv_cpp_pkg import piv_process; print('OK')\""
           CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: ""
 
       - uses: actions/upload-artifact@v4
@@ -223,7 +221,7 @@ jobs:
           path: dist
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: dist/*
           generate_release_notes: true
