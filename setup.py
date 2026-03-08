@@ -57,10 +57,22 @@ def build_cpp_library():
 
 
 def find_library_file(patterns):
-    for pattern in patterns:
-        matches = sorted(BUILD_DIR.rglob(pattern))
-        if matches:
-            return matches[0]
+    candidate_dirs = [
+        BUILD_DIR / "openpiv" / "Release",
+        BUILD_DIR / "openpiv",
+        BUILD_DIR / "out" / "Release",
+        BUILD_DIR / "out",
+        BUILD_DIR / "Release",
+        BUILD_DIR,
+    ]
+
+    for directory in candidate_dirs:
+        if not directory.exists():
+            continue
+        for pattern in patterns:
+            matches = sorted(directory.glob(pattern))
+            if matches:
+                return matches[0]
     return None
 
 

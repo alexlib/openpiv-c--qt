@@ -67,7 +67,7 @@ namespace openpiv::core::logger {
     namespace detail {
         inline void append_format(std::string& output, const std::string_view fmt)
         {
-            output.append(fmt.data(), fmt.size());
+            output.append(fmt);
         }
 
         template <typename T, typename... Ts>
@@ -76,11 +76,11 @@ namespace openpiv::core::logger {
             auto pos = fmt.find("{}");
             if (pos == std::string_view::npos)
             {
-                output.append(fmt.data(), fmt.size());
+                output.append(fmt);
                 return;
             }
 
-            output.append(fmt.data(), pos);
+            output.append(fmt.substr(0, pos));
             output += to_string(t);
             append_format(output, fmt.substr(pos + 2), ts...);
         }
