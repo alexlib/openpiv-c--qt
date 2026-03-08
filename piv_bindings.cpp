@@ -176,12 +176,22 @@ py::dict piv_process(
     }
     
     py::dict stats;
-    stats["min_speed"] = min_speed;
-    stats["max_speed"] = max_speed;
-    stats["mean_speed"] = sum_speed / n;
-    stats["min_sn"] = min_sn;
-    stats["max_sn"] = max_sn;
-    stats["mean_sn"] = sum_sn / n;
+    if (n > 0) {
+        stats["min_speed"] = min_speed;
+        stats["max_speed"] = max_speed;
+        stats["mean_speed"] = sum_speed / static_cast<double>(n);
+        stats["min_sn"] = min_sn;
+        stats["max_sn"] = max_sn;
+        stats["mean_sn"] = sum_sn / static_cast<double>(n);
+    } else {
+        // No vectors found: avoid division by zero and return neutral stats
+        stats["min_speed"] = 0.0;
+        stats["max_speed"] = 0.0;
+        stats["mean_speed"] = 0.0;
+        stats["min_sn"] = 0.0;
+        stats["max_sn"] = 0.0;
+        stats["mean_sn"] = 0.0;
+    }
     stats["vector_count"] = n;
     
     result["stats"] = stats;
