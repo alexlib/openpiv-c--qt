@@ -77,7 +77,10 @@ class CustomBuildExt(build_ext):
         build_dir = Path(__file__).parent / "builddir" / "openpiv"
         
         # Compiler flags
-        extra_compile_args = ["-O3", "-std=c++17", "-fvisibility=hidden"]
+        if getattr(self, "compiler", None) is not None and self.compiler.compiler_type == "msvc":
+            extra_compile_args = ["/O2", "/std:c++17"]
+        else:
+            extra_compile_args = ["-O3", "-std=c++17", "-fvisibility=hidden"]
         extra_link_args = []
         
         libraries = []
