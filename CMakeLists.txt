@@ -15,6 +15,9 @@ set(openpiv-c++_VERSION_PATCH 0)
 
 enable_testing()
 
+option(OPENPIV_BUILD_TESTS "Build unit tests" ON)
+option(OPENPIV_BUILD_EXAMPLES "Build example applications" ON)
+
 if(WIN32)
   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/out)
   set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/out)
@@ -31,5 +34,10 @@ else()
 endif()
 
 add_subdirectory(openpiv)
-add_subdirectory(test)
-add_subdirectory(examples)
+if(OPENPIV_BUILD_TESTS)
+  add_subdirectory(test)
+endif()
+
+if(OPENPIV_BUILD_EXAMPLES)
+  add_subdirectory(examples)
+endif()
