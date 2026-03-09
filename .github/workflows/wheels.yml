@@ -40,7 +40,7 @@ jobs:
 
       # Build wheels using cibuildwheel
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.21.3
+        uses: pypa/cibuildwheel@v3.4.0
         env:
           # Build CPython 3.8-3.13
           CIBW_BUILD: "cp38-* cp39-* cp310-* cp311-* cp312-* cp313-*"
@@ -52,7 +52,7 @@ jobs:
           CIBW_ENVIRONMENT_MACOS: "MACOSX_DEPLOYMENT_TARGET=10.15"
           # Install dependencies before building on macOS
           CIBW_BEFORE_ALL_MACOS: "brew install cmake ninja pkg-config libtiff"
-          # Install dependencies before building on Linux
+          # Install dependencies before building on Linux (manylinux uses yum)
           CIBW_BEFORE_ALL_LINUX: |
             yum install -y cmake ninja-build pkgconfig libtiff-devel libjpeg-devel zlib-devel
           # Test requirements
