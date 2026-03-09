@@ -134,9 +134,17 @@ class CustomBuildExt(build_ext):
 
         shared_library = self.library_info["shared_library"]
         if shared_library is not None:
+            # Copy to build output directory
             destination = extdir / shared_library.name
             if shared_library.resolve() != destination.resolve():
                 shutil.copy2(shared_library, destination)
+            
+            # For editable installs, also copy to source directory
+            source_pkg_dir = ROOT_DIR / "openpiv_cpp_pkg"
+            if source_pkg_dir.exists():
+                source_destination = source_pkg_dir / shared_library.name
+                if shared_library.resolve() != source_destination.resolve():
+                    shutil.copy2(shared_library, source_destination)
 
 
 def get_extensions():

@@ -48,6 +48,9 @@ Repository = "https://github.com/OpenPIV/openpiv-c--qt.git"
 [tool.setuptools.packages.find]
 include = ["openpiv_cpp_pkg*"]
 
+[tool.setuptools.package-data]
+openpiv_cpp_pkg = ["*.so", "*.dll", "*.dylib", "*.pyd"]
+
 # =============================================================================
 # cibuildwheel configuration for building manylinux wheels
 # =============================================================================
