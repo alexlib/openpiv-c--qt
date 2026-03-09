@@ -45,7 +45,6 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           ./external/vcpkg/bootstrap-vcpkg.sh -disableMetrics
-          ./external/vcpkg/vcpkg update
 
       - name: Bootstrap vcpkg (macOS)
         if: runner.os == 'macOS'
@@ -53,7 +52,8 @@ jobs:
           # Force vcpkg to use system tools (brew's cmake, ninja, etc.)
           export VCPKG_FORCE_SYSTEM_BINARIES=1
           ./external/vcpkg/bootstrap-vcpkg.sh -disableMetrics
-          ./external/vcpkg/vcpkg update
+          # Note: vcpkg update doesn't work in manifest mode, dependencies are
+          # managed via vcpkg.json and installed automatically during cmake configure
 
       - name: Bootstrap vcpkg (Windows)
         if: runner.os == 'Windows'
