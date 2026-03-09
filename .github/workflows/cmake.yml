@@ -40,7 +40,8 @@ jobs:
       - name: Install macOS dependencies
         if: runner.os == 'macOS'
         run: |
-          brew install cmake ninja pkg-config libtiff
+          brew update
+          brew install ninja cmake gcc pkg-config libtiff
 
       # Install Windows dependencies
       - name: Install Windows dependencies
