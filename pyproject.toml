@@ -97,7 +97,7 @@ fi
 environment = { CMAKE_BUILD_TYPE = "Release", PIP_VERBOSE = "1" }
 
 # Repair wheels with auditwheel
-repair-wheel-command = "auditwheel repair --plat {plat} -w {dest_dir} {wheel}"
+repair-wheel-command = "auditwheel repair -w {dest_dir} {wheel}"
 
 # =============================================================================
 # macOS configuration
