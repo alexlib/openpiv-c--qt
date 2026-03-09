@@ -41,6 +41,9 @@ def build_cpp_library():
         "-DOPENPIV_BUILD_EXAMPLES=OFF",
         "-DVCPKG_MANIFEST_MODE=OFF",
     ]
+    if sys.platform == "win32":
+        # Remove /WX (warnings-as-errors) to avoid MSVC build failures
+        configure_command.append("-DCMAKE_CXX_FLAGS=/EHsc /W3")
     if shutil.which("ninja") is not None:
         configure_command.extend(["-G", "Ninja"])
 
@@ -115,7 +118,7 @@ class CustomBuildExt(build_ext):
         extdir.mkdir(parents=True, exist_ok=True)
 
         if getattr(self, "compiler", None) is not None and self.compiler.compiler_type == "msvc":
-            extra_compile_args = ["/O2", "/std:c++17"]
+            extra_compile_args = ["/O2", "/std:c++17", "/D_USE_MATH_DEFINES"]
             extra_link_args = []
         else:
             extra_compile_args = ["-O3", "-std=c++17", "-fvisibility=hidden"]
@@ -149,6 +152,7 @@ def get_extensions():
                 "openpiv",
                 "external/pocketfft",
             ],
+            define_macros=[("_USE_MATH_DEFINES", None)],  # required for M_PI on MSVC
             language="c++",
         ),
     ]

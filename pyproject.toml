@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61", "wheel", "pybind11>=2.11"]
+requires = ["setuptools>=61", "wheel", "pybind11>=2.11", "cmake>=3.15", "ninja"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -59,7 +59,7 @@ build = ["cp38-*", "cp39-*", "cp310-*", "cp311-*", "cp312-*", "cp313-*"]
 skip = ["*-win32", "*-manylinux_i686", "pp*", "*-musllinux*"]
 
 # Build frontend
-build-frontend = "pip"
+build-frontend = "build"
 
 # Testing configuration
 test-requires = ["pytest", "numpy"]
@@ -82,11 +82,9 @@ archs = ["x86_64", "aarch64"]
 # Install system dependencies before build
 before-all = """
 if command -v yum &> /dev/null; then
-    # CentOS/RHEL (manylinux)
-    yum install -y cmake ninja-build pkgconfig libtiff-devel libjpeg-devel zlib-devel
+    yum install -y libtiff-devel
 else
-    # Ubuntu/Debian
-    apt-get update && apt-get install -y cmake ninja-build pkg-config libtiff-dev libjpeg-dev zlib1g-dev
+    apt-get update && apt-get install -y libtiff-dev
 fi
 """
 
@@ -100,15 +98,15 @@ repair-wheel-command = "auditwheel repair --plat {plat} -w {dest_dir} {wheel}"
 # macOS configuration
 # =============================================================================
 [tool.cibuildwheel.macos]
-# Minimum macOS version
-environment = { MACOSX_DEPLOYMENT_TARGET = "10.15" }
+# Minimum macOS version (arm64 requires 11.0)
+environment = { MACOSX_DEPLOYMENT_TARGET = "11.0" }
 
-# Architecture support (Intel + Apple Silicon)
-archs = ["x86_64", "arm64", "universal2"]
+# Architecture support - only arm64 on macos-14 runners
+archs = ["arm64"]
 
 # Install dependencies with brew
 before-all = """
-brew install cmake ninja pkg-config libtiff
+brew install libtiff || true
 """
 
 # Delocate for fixing dylib paths

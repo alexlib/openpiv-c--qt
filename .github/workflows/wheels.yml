@@ -2,10 +2,10 @@ name: Build Wheels
 
 on:
   push:
-    branches: [main, master]
+    branches: [main, master, pybind11]
     tags: ["v*"]
   pull_request:
-    branches: [main, master]
+    branches: [main, master, pybind11]
   workflow_dispatch:
 
 env:
@@ -76,11 +76,9 @@ jobs:
           CIBW_ARCHS_LINUX: ${{ matrix.arch }}
           CIBW_MANYLINUX_X86_64_IMAGE: "manylinux2014"
           CIBW_MANYLINUX_AARCH64_IMAGE: "manylinux2014"
+          CIBW_BUILD_FRONTEND: "build"
           CIBW_BEFORE_ALL_LINUX: |
-            yum install -y gcc gcc-c++ make pkgconfig libtiff-devel libjpeg-devel zlib-devel
-            pip install cmake ninja
-            cmake --version
-            ninja --version
+            yum install -y libtiff-devel || (apt-get update && apt-get install -y libtiff-dev)
           CIBW_TEST_REQUIRES: "pytest numpy"
           CIBW_TEST_COMMAND: "python -c \"from openpiv_cpp_pkg.openpiv_cpp import piv_process; print('OK')\""
           CIBW_TEST_SKIP: "*aarch64"
@@ -94,7 +92,6 @@ jobs:
   # ============================================================================
   # Build macOS wheels (Apple Silicon)
   # macos-13 (Intel) was retired by GitHub in 2025.
-  # x86_64 cross-compilation on arm64 is blocked by arm64-only brew libs.
   # ============================================================================
   build_macos:
     name: macOS arm64
@@ -105,18 +102,18 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Install dependencies
-        run: brew install cmake ninja pkg-config libtiff
+      - name: Install libtiff
+        run: brew install libtiff || true
 
       - name: Build wheels with cibuildwheel
         uses: pypa/cibuildwheel@v2.21.3
         env:
-          CIBW_BUILD: "cp38-* cp39-* cp310-* cp311-* cp312-* cp313-*"
+          CIBW_BUILD: "cp39-* cp310-* cp311-* cp312-* cp313-*"
           CIBW_BUILD_FRONTEND: "build"
-          CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=10.15
+          CIBW_ENVIRONMENT_MACOS: "MACOSX_DEPLOYMENT_TARGET=11.0"
           CIBW_SKIP: "*-win32 *-manylinux* pp*"
           CIBW_ARCHS_MACOS: "arm64"
-          CIBW_BEFORE_ALL_MACOS: "brew install cmake ninja pkg-config libtiff || true"
+          CIBW_BEFORE_ALL_MACOS: "brew install libtiff || true"
           CIBW_TEST_REQUIRES: "pytest numpy"
           CIBW_TEST_COMMAND: "python -c \"from openpiv_cpp_pkg.openpiv_cpp import piv_process; print('OK')\""
           CIBW_REPAIR_WHEEL_COMMAND_MACOS: "delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v {wheel}"
@@ -146,7 +143,8 @@ jobs:
           CIBW_BUILD: "cp38-* cp39-* cp310-* cp311-* cp312-* cp313-*"
           CIBW_SKIP: "*-win32 *-manylinux* pp*"
           CIBW_ARCHS_WINDOWS: "AMD64"
-          CIBW_BEFORE_ALL_WINDOWS: "choco upgrade cmake ninja pkgconfiglite -y --no-progress"
+          CIBW_BUILD_FRONTEND: "build"
+          CIBW_BEFORE_ALL_WINDOWS: "choco install ninja -y --no-progress || true"
           CIBW_TEST_REQUIRES: "pytest numpy"
           CIBW_TEST_COMMAND: "python -c \"from openpiv_cpp_pkg.openpiv_cpp import piv_process; print('OK')\""
           CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: ""
