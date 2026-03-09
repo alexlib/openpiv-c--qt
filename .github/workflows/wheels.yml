@@ -84,7 +84,7 @@ jobs:
           CIBW_TEST_REQUIRES: "pytest numpy"
           CIBW_TEST_COMMAND: "python -c \"from openpiv_cpp_pkg.openpiv_cpp import piv_process; print('OK')\""
           CIBW_TEST_SKIP: "*aarch64"
-          CIBW_REPAIR_WHEEL_COMMAND_LINUX: "auditwheel repair --plat {plat} -w {dest_dir} {wheel}"
+          CIBW_REPAIR_WHEEL_COMMAND_LINUX: "auditwheel repair --plat ${{ matrix.platform }} -w /tmp/cibuildwheel/repaired_wheel /tmp/cibuildwheel/built_wheel/*.whl"
 
       - uses: actions/upload-artifact@v4
         with:
