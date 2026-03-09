@@ -41,6 +41,15 @@ def build_cpp_library():
         "-DOPENPIV_BUILD_EXAMPLES=OFF",
         "-DVCPKG_MANIFEST_MODE=OFF",
     ]
+    
+    # Use vcpkg toolchain if available (for Windows or explicit setup)
+    # Otherwise use system libraries (brew on macOS, apt on Linux)
+    vcpkg_toolchain = ROOT_DIR / "external" / "vcpkg" / "scripts" / "buildsystems" / "vcpkg.cmake"
+    if vcpkg_toolchain.exists() and sys.platform == "win32":
+        configure_command.extend([
+            "-DCMAKE_TOOLCHAIN_FILE=" + str(vcpkg_toolchain),
+        ])
+    
     if shutil.which("ninja") is not None:
         configure_command.extend(["-G", "Ninja"])
 
