@@ -19,6 +19,8 @@ jobs:
   build_sdist:
     name: Build source distribution
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
         with:
@@ -51,6 +53,8 @@ jobs:
   build_linux:
     name: Linux ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -96,6 +100,8 @@ jobs:
   build_macos:
     name: macOS arm64
     runs-on: macos-14
+    permissions:
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
@@ -129,6 +135,8 @@ jobs:
   build_windows:
     name: Windows AMD64
     runs-on: windows-2022
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
 

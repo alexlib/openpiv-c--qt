@@ -102,6 +102,8 @@ repair-wheel-command = "auditwheel repair --plat {plat} -w {dest_dir} {wheel}"
 environment = { MACOSX_DEPLOYMENT_TARGET = "11.0" }
 
 # Architecture support - only arm64 on macos-14 runners
+# Note: cp38 is excluded in the workflow (see wheels.yml) because Python 3.8
+# targets macOS 10.15 which pre-dates Apple Silicon (arm64 requires macOS 11.0+)
 archs = ["arm64"]
 
 # Install dependencies with brew

@@ -118,7 +118,7 @@ class CustomBuildExt(build_ext):
         extdir.mkdir(parents=True, exist_ok=True)
 
         if getattr(self, "compiler", None) is not None and self.compiler.compiler_type == "msvc":
-            extra_compile_args = ["/O2", "/std:c++17", "/D_USE_MATH_DEFINES"]
+            extra_compile_args = ["/O2", "/std:c++17"]
             extra_link_args = []
         else:
             extra_compile_args = ["-O3", "-std=c++17", "-fvisibility=hidden"]
