@@ -42,13 +42,14 @@ def build_cpp_library():
         "-DVCPKG_MANIFEST_MODE=OFF",
     ]
     
-    # Use vcpkg toolchain if available (for Windows or explicit setup)
-    # Otherwise use system libraries (brew on macOS, apt on Linux)
+    # Use vcpkg toolchain if explicitly set via environment variable
     vcpkg_toolchain = ROOT_DIR / "external" / "vcpkg" / "scripts" / "buildsystems" / "vcpkg.cmake"
-    if vcpkg_toolchain.exists() and sys.platform == "win32":
-        configure_command.extend([
-            "-DCMAKE_TOOLCHAIN_FILE=" + str(vcpkg_toolchain),
-        ])
+    if vcpkg_toolchain.exists():
+        toolchain_file = Path(__import__("os").environ.get("CMAKE_TOOLCHAIN_FILE", ""))
+        if toolchain_file.exists() or sys.platform == "win32":
+            configure_command.extend([
+                "-DCMAKE_TOOLCHAIN_FILE=" + str(vcpkg_toolchain),
+            ])
     
     if shutil.which("ninja") is not None:
         configure_command.extend(["-G", "Ninja"])

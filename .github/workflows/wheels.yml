@@ -15,8 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Skip Windows for now - requires MSVC/vcpkg integration
-        os: [ubuntu-latest, ubuntu-24.04-arm, macos-14]
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-14, windows-latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -37,6 +36,10 @@ jobs:
           # Install dependencies before building
           CIBW_BEFORE_ALL_MACOS: "brew update && brew install ninja cmake gcc pkg-config libtiff"
           CIBW_BEFORE_ALL_LINUX: "yum install -y cmake ninja-build pkgconfig libtiff-devel libjpeg-devel zlib-devel"
+          # Windows: bootstrap vcpkg and install dependencies
+          CIBW_BEFORE_ALL_WINDOWS: "cmd /c external\\vcpkg\\bootstrap-vcpkg.bat -disableMetrics"
+          # Windows: set vcpkg toolchain for CMake
+          CIBW_ENVIRONMENT_WINDOWS: "CMAKE_TOOLCHAIN_FILE=%GITHUB_WORKSPACE%\\external\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake;VCPKG_TARGET_TRIPLET=x64-windows"
           # Test requirements
           CIBW_TEST_REQUIRES: "pytest numpy"
           # Test command
