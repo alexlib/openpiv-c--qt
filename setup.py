@@ -39,6 +39,7 @@ def build_cpp_library():
         "-DCMAKE_BUILD_TYPE=Release",
         "-DOPENPIV_BUILD_TESTS=OFF",
         "-DOPENPIV_BUILD_EXAMPLES=OFF",
+        "-DVCPKG_MANIFEST_MODE=OFF",
     ]
     if shutil.which("ninja") is not None:
         configure_command.extend(["-G", "Ninja"])

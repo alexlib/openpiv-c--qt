@@ -77,14 +77,10 @@ jobs:
           CIBW_MANYLINUX_X86_64_IMAGE: "manylinux2014"
           CIBW_MANYLINUX_AARCH64_IMAGE: "manylinux2014"
           CIBW_BEFORE_ALL_LINUX: |
-            yum install -y \
-              gcc gcc-c++ make \
-              cmake ninja-build \
-              pkgconfig \
-              libtiff-devel libjpeg-devel zlib-devel
+            yum install -y gcc gcc-c++ make pkgconfig libtiff-devel libjpeg-devel zlib-devel
+            pip install cmake ninja
+            cmake --version
             ninja --version
-            gcc --version
-            g++ --version        
           CIBW_TEST_REQUIRES: "pytest numpy"
           CIBW_TEST_COMMAND: "python -c \"from openpiv_cpp_pkg.openpiv_cpp import piv_process; print('OK')\""
           CIBW_TEST_SKIP: "*aarch64"
@@ -96,19 +92,13 @@ jobs:
           path: ./wheelhouse/*.whl
 
   # ============================================================================
-  # Build macOS wheels (Intel + Apple Silicon)
+  # Build macOS wheels (Apple Silicon)
+  # macos-13 (Intel) was retired by GitHub in 2025.
+  # x86_64 cross-compilation on arm64 is blocked by arm64-only brew libs.
   # ============================================================================
   build_macos:
-    name: macOS ${{ matrix.arch }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: macos-13
-            arch: x86_64
-          - os: macos-14
-            arch: arm64
+    name: macOS arm64
+    runs-on: macos-14
 
     steps:
       - uses: actions/checkout@v4
@@ -118,27 +108,22 @@ jobs:
       - name: Install dependencies
         run: brew install cmake ninja pkg-config libtiff
 
-      - name: Preinstall virtualenv (avoid get-virtualenv GitHub download)
-        run: python3 -m pip install --upgrade pip virtualenv
-
       - name: Build wheels with cibuildwheel
         uses: pypa/cibuildwheel@v2.21.3
         env:
           CIBW_BUILD: "cp38-* cp39-* cp310-* cp311-* cp312-* cp313-*"
           CIBW_BUILD_FRONTEND: "build"
-          CIBW_ENVIRONMENT_MACOS: >
-            MACOSX_DEPLOYMENT_TARGET=10.15
-            PIP_USE_VIRTUALENV=0          
+          CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=10.15
           CIBW_SKIP: "*-win32 *-manylinux* pp*"
-          CIBW_ARCHS_MACOS: ${{ matrix.arch }}
-          CIBW_BEFORE_ALL_MACOS: "brew install cmake ninja pkg-config libtiff"
+          CIBW_ARCHS_MACOS: "arm64"
+          CIBW_BEFORE_ALL_MACOS: "brew install cmake ninja pkg-config libtiff || true"
           CIBW_TEST_REQUIRES: "pytest numpy"
           CIBW_TEST_COMMAND: "python -c \"from openpiv_cpp_pkg.openpiv_cpp import piv_process; print('OK')\""
           CIBW_REPAIR_WHEEL_COMMAND_MACOS: "delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v {wheel}"
 
       - uses: actions/upload-artifact@v4
         with:
-          name: wheels-macos-${{ matrix.arch }}
+          name: wheels-macos-arm64
           path: ./wheelhouse/*.whl
 
   # ============================================================================
@@ -155,19 +140,13 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Install system dependencies
-        run: |
-          choco install cmake ninja pkgconfiglite -y --no-progress
-          refreshenv
-        continue-on-error: false
-
       - name: Build wheels with cibuildwheel
         uses: pypa/cibuildwheel@v2.21.3
         env:
           CIBW_BUILD: "cp38-* cp39-* cp310-* cp311-* cp312-* cp313-*"
           CIBW_SKIP: "*-win32 *-manylinux* pp*"
           CIBW_ARCHS_WINDOWS: "AMD64"
-          CIBW_BEFORE_ALL_WINDOWS: "choco install cmake ninja pkgconfiglite -y --no-progress"
+          CIBW_BEFORE_ALL_WINDOWS: "choco upgrade cmake ninja pkgconfiglite -y --no-progress"
           CIBW_TEST_REQUIRES: "pytest numpy"
           CIBW_TEST_COMMAND: "python -c \"from openpiv_cpp_pkg.openpiv_cpp import piv_process; print('OK')\""
           CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: ""
