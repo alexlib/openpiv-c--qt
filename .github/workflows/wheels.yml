@@ -15,7 +15,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, ubuntu-24.04-arm, windows-latest, macos-14]
+        # Skip Windows for now - requires MSVC/vcpkg integration
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-14]
 
     steps:
       - uses: actions/checkout@v4
@@ -36,7 +37,6 @@ jobs:
           # Install dependencies before building
           CIBW_BEFORE_ALL_MACOS: "brew update && brew install ninja cmake gcc pkg-config libtiff"
           CIBW_BEFORE_ALL_LINUX: "yum install -y cmake ninja-build pkgconfig libtiff-devel libjpeg-devel zlib-devel"
-          CIBW_BEFORE_ALL_WINDOWS: "choco install -y ninja cmake"
           # Test requirements
           CIBW_TEST_REQUIRES: "pytest numpy"
           # Test command
