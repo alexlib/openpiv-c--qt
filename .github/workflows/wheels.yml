@@ -8,166 +8,68 @@ on:
     branches: [main, master]
   workflow_dispatch:
 
-env:
-  UV_VERSION: "0.5.x"
-  CIBW_VERSION: "2.21.3"
-
 jobs:
-  # ============================================================================
-  # Build source distribution
-  # ============================================================================
-  build_sdist:
-    name: Build source distribution
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v3
-        with:
-          version: ${{ env.UV_VERSION }}
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install build dependencies
-        run: uv pip install --system build setuptools wheel pybind11
-
-      - name: Build sdist
-        run: python -m build --sdist
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: dist-sdist
-          path: dist/*.tar.gz
-
-  # ============================================================================
-  # Build Linux wheels (x86_64 and aarch64) using Docker/cibuildwheel
-  # ============================================================================
-  build_linux:
-    name: Linux ${{ matrix.arch }}
+  build_wheels:
+    name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04]
-        arch: [x86_64, aarch64]
+        # macos-14 is Apple Silicon, macos-13 is Intel (deprecated)
+        # ubuntu-24.04-arm provides native ARM64 Linux builds
+        os: [ubuntu-latest, ubuntu-24.04-arm, windows-latest, macos-14]
 
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+          persist-credentials: false
 
-      - name: Set up QEMU
-        if: matrix.arch == 'aarch64'
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: arm64
-
-      - name: Build wheels with cibuildwheel
-        uses: pypa/cibuildwheel@v2.21.3
-        env:
-          CIBW_BUILD: "cp38-* cp39-* cp310-* cp311-* cp312-* cp313-*"
-          CIBW_SKIP: "*-win32 *-manylinux_i686 pp* *-musllinux*"
-          CIBW_ARCHS_LINUX: ${{ matrix.arch }}
-          CIBW_MANYLINUX_X86_64_IMAGE: "manylinux2014"
-          CIBW_MANYLINUX_AARCH64_IMAGE: "manylinux2014"
-          CIBW_BEFORE_ALL_LINUX: |
-            yum install -y gcc gcc-c++ make pkgconfig libtiff-devel libjpeg-devel zlib-devel
-            pip install cmake ninja
-            cmake --version
-            ninja --version
-          CIBW_TEST_REQUIRES: "pytest numpy"
-          CIBW_TEST_COMMAND: "python -c \"from openpiv_cpp_pkg.openpiv_cpp import piv_process; print('OK')\""
-          CIBW_TEST_SKIP: "*aarch64"
-          CIBW_REPAIR_WHEEL_COMMAND_LINUX: "auditwheel repair --plat manylinux2014_${{ matrix.arch }} -w {dest_dir} {wheel}"
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: wheels-linux-${{ matrix.arch }}
-          path: ./wheelhouse/*.whl
-
-  # ============================================================================
-  # Build macOS wheels (Apple Silicon)
-  # macos-13 (Intel) was retired by GitHub in 2025.
-  # x86_64 cross-compilation on arm64 is blocked by arm64-only brew libs.
-  # ============================================================================
-  build_macos:
-    name: macOS arm64
-    runs-on: macos-14
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-
-      - name: Set up Python (official Python.org for cibuildwheel compatibility)
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install build dependencies
+      # Install build dependencies on macOS
+      - name: Install macOS dependencies
+        if: runner.os == 'macOS'
         run: |
           brew install cmake ninja pkg-config libtiff
 
-      - name: Build wheels with cibuildwheel
+      # Install build dependencies on Linux
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build libtiff-dev
+
+      # Build wheels using cibuildwheel
+      - name: Build wheels
         uses: pypa/cibuildwheel@v2.21.3
         env:
+          # Build CPython 3.8-3.13
           CIBW_BUILD: "cp38-* cp39-* cp310-* cp311-* cp312-* cp313-*"
-          CIBW_BUILD_FRONTEND: "build"
-          CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=10.15
-          CIBW_SKIP: "*-win32 *-manylinux* pp*"
+          # Skip 32-bit, musllinux, and PyPy
+          CIBW_SKIP: "*-win32 *-manylinux_i686 pp* *-musllinux*"
+          # macOS: build arm64 only (Intel runner retired)
           CIBW_ARCHS_MACOS: "arm64"
-          CIBW_BEFORE_ALL_MACOS: "brew install cmake ninja pkg-config libtiff || true"
+          # Set minimum macOS version
+          CIBW_ENVIRONMENT_MACOS: "MACOSX_DEPLOYMENT_TARGET=10.15"
+          # Install dependencies before building on macOS
+          CIBW_BEFORE_ALL_MACOS: "brew install cmake ninja pkg-config libtiff"
+          # Install dependencies before building on Linux
+          CIBW_BEFORE_ALL_LINUX: |
+            yum install -y cmake ninja-build pkgconfig libtiff-devel libjpeg-devel zlib-devel
+          # Test requirements
           CIBW_TEST_REQUIRES: "pytest numpy"
+          # Test command
           CIBW_TEST_COMMAND: "python -c \"from openpiv_cpp_pkg.openpiv_cpp import piv_process; print('OK')\""
-          CIBW_REPAIR_WHEEL_COMMAND_MACOS: "delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v {wheel}"
+          # Skip testing on cross-compiled builds
+          CIBW_TEST_SKIP: "*-macosx_arm64 *-manylinux_aarch64"
 
       - uses: actions/upload-artifact@v4
         with:
-          name: wheels-macos-arm64
+          name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
           path: ./wheelhouse/*.whl
 
-  # ============================================================================
-  # Build Windows wheels
-  # ============================================================================
-  build_windows:
-    name: Windows AMD64
-    runs-on: windows-2022
-    strategy:
-      fail-fast: false
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-
-      - name: Build wheels with cibuildwheel
-        uses: pypa/cibuildwheel@v2.21.3
-        env:
-          CIBW_BUILD: "cp38-* cp39-* cp310-* cp311-* cp312-* cp313-*"
-          CIBW_SKIP: "*-win32 *-manylinux* pp*"
-          CIBW_ARCHS_WINDOWS: "AMD64"
-          CIBW_BEFORE_ALL_WINDOWS: "choco upgrade cmake ninja pkgconfiglite -y --no-progress"
-          CIBW_TEST_REQUIRES: "pytest numpy"
-          CIBW_TEST_COMMAND: "python -c \"from openpiv_cpp_pkg.openpiv_cpp import piv_process; print('OK')\""
-          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: ""
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: wheels-windows
-          path: ./wheelhouse/*.whl
-
-  # ============================================================================
-  # Merge all artifacts and upload to PyPI
-  # ============================================================================
+  # Upload to PyPI on tagged releases
   upload_pypi:
-    name: Upload to PyPI
-    needs: [build_sdist, build_linux, build_macos, build_windows]
+    needs: [build_wheels]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
     environment:
@@ -179,49 +81,9 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          pattern: wheels-*
+          pattern: cibw-wheels-*
           merge-multiple: true
           path: dist
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: dist-sdist
-          path: dist
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v3
-        with:
-          version: ${{ env.UV_VERSION }}
 
       - name: Publish to PyPI
-        run: uv publish --trusted-publishing always
-
-  # ============================================================================
-  # Create GitHub Release with assets
-  # ============================================================================
-  github_release:
-    name: Create GitHub Release
-    needs: [build_sdist, build_linux, build_macos, build_windows]
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
-    permissions:
-      contents: write
-
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          pattern: wheels-*
-          merge-multiple: true
-          path: dist
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: dist-sdist
-          path: dist
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: dist/*
-          generate_release_notes: true
-          draft: false
+        uses: pypa/gh-action-pypi-publish@release/v1
