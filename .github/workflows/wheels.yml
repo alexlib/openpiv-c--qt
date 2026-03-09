@@ -105,12 +105,14 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Install dependencies
+      - name: Set up Python (official Python.org for cibuildwheel compatibility)
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install build dependencies
         run: |
           brew install cmake ninja pkg-config libtiff
-          # Pre-install virtualenv to avoid HTTP 429 rate limit from GitHub
-          # Use --break-system-packages for PEP 668 compliance on modern macOS
-          pip3 install --break-system-packages virtualenv
 
       - name: Build wheels with cibuildwheel
         uses: pypa/cibuildwheel@v2.21.3
@@ -121,8 +123,6 @@ jobs:
           CIBW_SKIP: "*-win32 *-manylinux* pp*"
           CIBW_ARCHS_MACOS: "arm64"
           CIBW_BEFORE_ALL_MACOS: "brew install cmake ninja pkg-config libtiff || true"
-          # Use system Python to avoid virtualenv download (HTTP 429 issues)
-          PIP_USE_VIRTUALENV: "false"
           CIBW_TEST_REQUIRES: "pytest numpy"
           CIBW_TEST_COMMAND: "python -c \"from openpiv_cpp_pkg.openpiv_cpp import piv_process; print('OK')\""
           CIBW_REPAIR_WHEEL_COMMAND_MACOS: "delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v {wheel}"
