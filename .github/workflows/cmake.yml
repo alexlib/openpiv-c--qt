@@ -2,36 +2,58 @@ name: CMake
 
 on:
   push:
-    branches: [ master ]
+    branches: [main, master]
   pull_request:
-    branches: [ master ]
+    branches: [main, master]
+  workflow_dispatch:
 
 env:
-  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
+  VCPKG_DISABLE_METRICS: 1
 
 jobs:
   build:
-    runs-on: ${{matrix.os}}
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: recursive
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
-    - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -S ${{github.workspace}} -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} --trace-expand
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y cmake ninja-build libtiff-dev
 
-    - name: Build
-      # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build --verbose --clean-first --config ${{env.BUILD_TYPE}}
+      - name: Install macOS dependencies
+        if: runner.os == 'macOS'
+        run: brew install ninja libtiff
 
-    - name: Test
-      working-directory: ${{github.workspace}}/build
-      # Execute tests defined by the CMake configuration.
-      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: ctest -C ${{env.BUILD_TYPE}}
+      - name: Install Windows dependencies
+        if: runner.os == 'Windows'
+        run: choco install ninja -y --no-progress
 
+      - name: Bootstrap vcpkg (Unix)
+        if: runner.os != 'Windows'
+        run: ./external/vcpkg/bootstrap-vcpkg.sh -disableMetrics
+
+      - name: Bootstrap vcpkg (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: external\vcpkg\bootstrap-vcpkg.bat -disableMetrics
+
+      - name: Configure CMake
+        run: >
+          cmake -S "${{ github.workspace }}" -B "${{ github.workspace }}/build"
+          -G Ninja
+          -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
+          "-DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/external/vcpkg/scripts/buildsystems/vcpkg.cmake"
+          "-DVCPKG_MANIFEST_FEATURES=tests;examples"
+
+      - name: Build
+        run: cmake --build "${{ github.workspace }}/build" --config "${{ env.BUILD_TYPE }}" --parallel
+
+      - name: Test
+        run: ctest --test-dir "${{ github.workspace }}/build" -C "${{ env.BUILD_TYPE }}" --output-on-failure
