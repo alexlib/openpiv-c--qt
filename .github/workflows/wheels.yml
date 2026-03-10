@@ -10,17 +10,61 @@ on:
 
 jobs:
   build_wheels:
-    name: Build wheels on ${{ matrix.os }}
+    name: Build wheels on ${{ matrix.os }}${{ matrix.job_name_suffix }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, ubuntu-24.04-arm, macos-14, windows-latest]
+        include:
+          - os: ubuntu-latest
+            job_name_suffix: ""
+            macos_archs: ""
+            macos_environment: "MACOSX_DEPLOYMENT_TARGET=10.15"
+          - os: ubuntu-24.04-arm
+            job_name_suffix: ""
+            macos_archs: ""
+            macos_environment: "MACOSX_DEPLOYMENT_TARGET=10.15"
+          - os: macos-14
+            job_name_suffix: " (arm64)"
+            macos_archs: "arm64"
+            macos_environment: "MACOSX_DEPLOYMENT_TARGET=10.15"
+          - os: macos-14
+            job_name_suffix: " (x86_64)"
+            macos_archs: "x86_64"
+            macos_environment: "MACOSX_DEPLOYMENT_TARGET=10.15 TIFF_LIBRARY=$TIFF_LIBRARY TIFF_INCLUDE_DIR=$TIFF_INCLUDE_DIR LIBTIFF_LIBRARY=$LIBTIFF_LIBRARY LIBTIFF_INCLUDE_DIR=$LIBTIFF_INCLUDE_DIR"
+          - os: windows-latest
+            job_name_suffix: ""
+            macos_archs: ""
+            macos_environment: "MACOSX_DEPLOYMENT_TARGET=10.15"
 
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+
+      - name: Install Rosetta
+        if: runner.os == 'macOS' && matrix.macos_archs == 'x86_64'
+        run: sudo softwareupdate --install-rosetta --agree-to-license || true
+
+      - name: Install x86_64 Homebrew
+        if: runner.os == 'macOS' && matrix.macos_archs == 'x86_64'
+        run: |
+          if [ ! -x "/usr/local/bin/brew" ]; then
+            arch -x86_64 /bin/bash -c \
+              "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          fi
+
+      - name: Install libtiff (x86_64)
+        if: runner.os == 'macOS' && matrix.macos_archs == 'x86_64'
+        run: arch -x86_64 /usr/local/bin/brew install libtiff
+
+      - name: Export libtiff paths
+        if: runner.os == 'macOS' && matrix.macos_archs == 'x86_64'
+        run: |
+          echo "TIFF_LIBRARY=/usr/local/lib/libtiff.dylib" >> "$GITHUB_ENV"
+          echo "TIFF_INCLUDE_DIR=/usr/local/include" >> "$GITHUB_ENV"
+          echo "LIBTIFF_LIBRARY=/usr/local/lib/libtiff.dylib" >> "$GITHUB_ENV"
+          echo "LIBTIFF_INCLUDE_DIR=/usr/local/include" >> "$GITHUB_ENV"
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.4.0
@@ -29,10 +73,10 @@ jobs:
           CIBW_BUILD: "cp38-* cp39-* cp310-* cp311-* cp312-* cp313-*"
           # Skip 32-bit, musllinux, and PyPy
           CIBW_SKIP: "*-win32 *-manylinux_i686 pp* *-musllinux*"
-          # macOS: build arm64 only
-          CIBW_ARCHS_MACOS: "arm64"
+          # macOS: build one architecture per matrix entry
+          CIBW_ARCHS_MACOS: ${{ matrix.macos_archs }}
           # Set minimum macOS version
-          CIBW_ENVIRONMENT_MACOS: "MACOSX_DEPLOYMENT_TARGET=10.15"
+          CIBW_ENVIRONMENT_MACOS: ${{ matrix.macos_environment }}
           # Install dependencies before building
           CIBW_BEFORE_ALL_MACOS: "brew update && brew install ninja cmake gcc pkg-config libtiff"
           CIBW_BEFORE_ALL_LINUX: "yum install -y cmake ninja-build pkgconfig libtiff-devel libjpeg-devel zlib-devel"
