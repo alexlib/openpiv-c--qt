@@ -8,3 +8,7 @@ TAGS
 .idea/
 test/
 build/
+/dist
+/openpiv_cpp.egg-info
+/openpiv_cpp_pkg
+/wheelhouse
