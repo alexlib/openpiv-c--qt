@@ -18,3 +18,4 @@ build/
 /openpiv_cpp_pkg/*.dll
 /openpiv_cpp_pkg/*.dylib
 /wheelhouse
+*.whl
