@@ -234,6 +234,8 @@ These are captured in `<dependency>.wrap`:
     * [ ] memory map files - check performance for large files
     * [ ] PNG - lodepng
     * [ ] RAW - libraw looks less than ideal but no alternative?
+    * [ ] BMP - easyBMP?
+    * [ ] JPEG - already incl in libjpeg-turbo
     * [ ] b16/PCO
   * utilities
     * [x] split RGB to 4xgreyscale
@@ -253,12 +255,18 @@ These are captured in `<dependency>.wrap`:
     * [ ] apply kernel in Fourier space
     * [x] use SIMD?
     * [x] real -> complex FFT/correlation of real data
-  * [ ] direct correlation
+    * [ ] normalized minimum quadratic differences (very robust)
+    * [ ] zero pad images
+  * direct correlation
+    * [ ] full window correlation
+    * [ ] partial window correlation (for enhancing FFT correlations)
+    * [ ] use SIMD?
   * image deformation
-    * [ ] Bilinear grid interpolator
-    * [ ] Shifted linear image deformation interpolation
-    * [ ] Polynomial interpolation (Lookup tables-based, so super fast!!)
-    * [ ] Sinc (Slow, but accurate)
+    * [ ] bilinear grid interpolator
+    * [ ] shifted linear image deformation interpolation (same as first degree polynomial for my impl)
+    * [ ] polynomial interpolation (lookup tables-based, so super fast!!)
+    * [ ] sinc (lookup table-based, so also quite fast; only 7x7 and 11x11 kernels supported)
+    * [ ] lancozs (lookup table-based, so also quite fast; generally more stable than sinc)
   * [x] peak detection
   * peak fitting
     * [x] 3 point Gaussian peak fit
@@ -269,7 +277,7 @@ These are captured in `<dependency>.wrap`:
     * [ ] nxn non-linear Gaussian peak fit (optimized via Levenberg-Marquardt or something similar)
     * [ ] nxn centroid peak fit (can be used for calibration marker detection)
   * multi-pass PIV
-    * [ ] Multi-pass iamge deform w/ multi-threading
+    * [ ] Multi-pass image deform w/ multi-threading
     * [ ] Failed correlations can use larger correlation window or imputation
 * image processing
   * filters
