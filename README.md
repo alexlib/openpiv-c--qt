@@ -272,11 +272,10 @@ This is about 230us per interrogation area (7 cores, 3696 interrogation areas, 0
     * [ ] partial window correlation (for enhancing FFT correlations)
     * [ ] use SIMD?
   * image deformation
-    * [ ] bilinear grid interpolator
     * [ ] shifted linear image deformation interpolation (same as first degree polynomial for my impl)
     * [ ] polynomial interpolation (lookup tables-based, so super fast!!)
     * [ ] sinc (lookup table-based, so also quite fast; only 7x7 and 11x11 kernels supported)
-    * [ ] lancozs (lookup table-based, so also quite fast; generally more stable than sinc)
+    * [ ] lanczos (lookup table-based, so also quite fast; generally more stable than sinc)
   * [x] peak detection
   * peak fitting
     * [x] 3 point Gaussian peak fit
@@ -287,6 +286,7 @@ This is about 230us per interrogation area (7 cores, 3696 interrogation areas, 0
     * [ ] nxn non-linear Gaussian peak fit (optimized via Levenberg-Marquardt or something similar)
     * [ ] nxn centroid peak fit (can be used for calibration marker detection)
   * multi-pass PIV
+    * [x] First pass w/ multi-threading
     * [ ] Multi-pass image deform w/ multi-threading
     * [ ] Failed correlations can use larger correlation window or imputation
 * image processing
