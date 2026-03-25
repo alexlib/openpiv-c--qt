@@ -244,6 +244,8 @@ This is about 230us per interrogation area (7 cores, 3696 interrogation areas, 0
     * [ ] memory map files - check performance for large files
     * [ ] PNG - lodepng
     * [ ] RAW - libraw looks less than ideal but no alternative?
+    * [ ] BMP - easyBMP?
+    * [ ] JPEG - already incl in libjpeg-turbo
     * [ ] b16/PCO
   * utilities
     * [x] split RGB to 4xgreyscale
@@ -263,12 +265,53 @@ This is about 230us per interrogation area (7 cores, 3696 interrogation areas, 0
     * [ ] apply kernel in Fourier space
     * [x] use SIMD?
     * [x] real -> complex FFT/correlation of real data
-  * [ ] direct correlation
+    * [ ] normalized minimum quadratic differences (very robust)
+    * [ ] zero pad images
+  * direct correlation
+    * [ ] full window correlation
+    * [ ] partial window correlation (for enhancing FFT correlations)
+    * [ ] use SIMD?
+  * image deformation
+    * [ ] bilinear grid interpolator
+    * [ ] shifted linear image deformation interpolation (same as first degree polynomial for my impl)
+    * [ ] polynomial interpolation (lookup tables-based, so super fast!!)
+    * [ ] sinc (lookup table-based, so also quite fast; only 7x7 and 11x11 kernels supported)
+    * [ ] lancozs (lookup table-based, so also quite fast; generally more stable than sinc)
   * [x] peak detection
-  * [x] peak fitting
+  * peak fitting
+    * [x] 3 point Gaussian peak fit
+    * [ ] 3 point parabolic peak fit
+    * [ ] 3 point centroid peak fit
+    * [ ] 3x3 least squares Gaussian peak fit (optimized via pseudo-inverse)
+    * [ ] nxn least squares Gaussian peak fit (optimized via pseudo-inverse)
+    * [ ] nxn non-linear Gaussian peak fit (optimized via Levenberg-Marquardt or something similar)
+    * [ ] nxn centroid peak fit (can be used for calibration marker detection)
+  * multi-pass PIV
+    * [ ] Multi-pass image deform w/ multi-threading
+    * [ ] Failed correlations can use larger correlation window or imputation
 * image processing
-  * [ ] change image_view to use array of pointers for each row?
-  * [ ] low/high pass filter
+  * filters
+    * [ ] change image_view to use array of pointers for each row?
+    * [ ] Gaussian low-pass filter
+    * [ ] Gaussian high-pass filter
+    * [ ] normalized variance filter
+    * [ ] contrast stretch filter (based on local percentile kernels)
+    * [ ] median filter
+    * [ ] min/max normalization filter
+    * [ ] smoothn from OpenPIV-Python (requires L-BFGS-B impl)
+  * adjustment
+    * [ ] crop (region of interest/ROI)
+    * [ ] skew
+    * [ ] stretch
+    * [ ] translate
+    * [ ] rotate
+    * [ ] flip (x or y axis)
+    * [ ] normalize (0..1 * scaling value)
+    * [ ] deform (Using same deformation algos in PIV image deformation)
+  * masking
+    * [ ] read mask image
+    * [ ] write mask image
+    * [ ] automatically create mask image
 * examples
   * [x] parallel cross-correlate
   * [x] image processing
@@ -286,7 +329,5 @@ This is about 230us per interrogation area (7 cores, 3696 interrogation areas, 0
   * [ ] ASCII/CSV
   * [ ] gnuplot/pyplot?
   * [ ] tecplot
-* GUI
-  * [ ] Qt?
-  * [ ] websockets/HTML5?
-  * [ ] webassembly + JS/HTML5?
+* interfacing
+  * [ ] nanobind (faster pybind11) for Python interfacing
