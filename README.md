@@ -71,7 +71,7 @@ To run tests:
 
 To get binaries:
 * `meson install -C builddir` if the prefix was set or
-* `meson install -C buildfir --destdir <some directory>` to install in a specific directory.
+* `meson install -C builddir --destdir <some directory>` to install in a specific directory.
 
 Sometimes you only want the runtime dynamic libraries and executables. Meson comes with a handy targeted installation using the following command:
  * `meson install -C builddir --tags runtime`

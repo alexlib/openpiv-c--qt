@@ -94,8 +94,8 @@ void add_piv_firstpass(py::module& m)
         py::arg("window_size"),
         py::arg("overlap_size"),
         py::arg("zero_pad") = false,
-        py::arg("centered") = true,
-        py::arg("limit_search") = true,
+        py::arg("centered") = false,
+        py::arg("limit_search") = false,
         py::arg("threads") = 1
     );
 };

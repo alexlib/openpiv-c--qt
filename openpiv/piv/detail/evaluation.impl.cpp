@@ -121,8 +121,8 @@ namespace openpiv::piv
             {
                 for (size_t i = 0; i < view_a.width(); ++i)
                 {
-                    iw_a[{i,j}] = (view_a[{i,j}] - view_a_mean) / view_a_std;
-                    iw_b[{i,j}] = (view_b[{i,j}] - view_b_mean) / view_b_std;
+                    iw_a[{i,j}] = (view_a[{i,j}] - view_a_mean); // / view_a_std;
+                    iw_b[{i,j}] = (view_b[{i,j}] - view_b_mean); // / view_b_std;
                 }
             }
 
