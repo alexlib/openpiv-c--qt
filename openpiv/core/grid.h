@@ -11,6 +11,24 @@
 
 namespace openpiv::core {
 
+    /// generate the field shape of a vector field
+    /// dimensions \a size and a specified \a offset
+    ///
+    /// generate_grid_shape( images_size, size( 32, 32 ), 0.5 )
+    core::size
+    generate_grid_shape( const core::size& image_size,
+                         const core::size& interrogation_size,
+                         double percentage_offset );
+
+    /// generate the field shape of a vector field
+    /// dimensions \a size and a specified \a offset in x and y
+    ///
+    /// generate_grid_shape( images_size, size( 32, 32 ), { 16, 16 } )
+    core::size
+    generate_grid_shape( const core::size& image_size,
+                         const core::size& interrogation_size,
+                         std::array< uint32_t, 2 > offsets );
+
     /// generate a centred cartesian grid of rectangles with
     /// dimensions \a size and a specified \a offset
     ///
