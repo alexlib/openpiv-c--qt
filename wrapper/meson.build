@@ -1,5 +1,4 @@
 sources = [
-    'core/module.cpp',
     'core/grid.cpp',
     'core/log.cpp',
     'core/point.cpp',
@@ -7,7 +6,9 @@ sources = [
     'core/size.cpp',
     'core/vector.cpp',
     'core/pixel_types.cpp',
-    'core/image.cpp'
+    'core/image.cpp',
+    'piv/firstpass.cpp',
+    'module/module.cpp'
 ]
 
 py.extension_module('pyopenpivcore',
