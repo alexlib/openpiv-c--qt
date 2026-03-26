@@ -19,3 +19,4 @@ build/
 /openpiv_cpp_pkg/*.dylib
 /wheelhouse
 *.whl
+external/vcpkg/

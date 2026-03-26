@@ -1,49 +1,101 @@
-![Build Status](https://github.com/OpenPIV/openpiv-c--qt/actions/workflows/cmake.yml/badge.svg)
+![Build Status](https://github.com/OpenPIV/openpiv-c--qt/actions/workflows/build_test.yml/badge.svg)
 
-# OpenPIV (c++)
+# OpenPIV (c++), a fast, open-source particle image velocimetry (PIV) library
 
-An implementation of a PIV analysis engine in C++ using as few dependencies as possible;
-the implementation requires a c++17 compliant compiler.
+## An implementation of a PIV analysis engine in C++ using as few dependencies as possible; the implementation requires a c++17 compliant compiler.
 
+This project is the result of the collaborative effort of numerous researchers in order to provide one of the fastest PIV software on the market while remaining cross-platform and open-source. The software can do the following:
+
+ * Load images
+ * Save images
+ * Pre-process and modify images
+ * Perform digital PIV analysis including subpixel estimation
+ * and more!
+ 
+## Image Loaders
+
+Loading and storing images are crucial for any PIV software. Due to this requirement, openpiv-c--qt implements image loaders that can load, convert, and store images.
+Currently, there are a few extensions that are supported, but more are under development.
+
+|Supported Extensions     | Decode | Encode |
+|-------------------------|--------|--------|
+| .b16 (PCO CamWare :tm: )| Planned| -      | 
+| .bmp                    | Planned| Planned| 
+| .jpeg                   | Planned| Planned| 
+| .png                    | Planned| Planned| 
+| .pnm (.pbm, .pgm, .ppm) | x      | x      |
+| .tif                    | x      | x      |
+| .webp                   | Planned| Planned|                    
+
+## Examples
+
+To demonstrate how this library can perform, two examples are provided in the /examples folder. The first example,
+[average_subtract](examples/average_subtract/README.md), is a utility that reads n images, calculates the average, and
+writes out n new images with the average subtracted. Additionally, a second example, [process](examples/process/README.md),
+is a straight-forward PIV cross correlator that reads two images and performs cross-correlation on them.
+    
 ## Build
 
 There are some external dependencies under external/, so when cloning use:
 
 ```git clone --recursive <path to git repo>```
 
-Building uses cmake and vcpkg, and is simplified by using a vcpkg manifest to specify
-the dependent packages. Vcpkg has some pre-requisites:
+Building uses meson, and is simplified by using meson wrap files to specify the dependent packages. Building has some pre-requisites:
 
 * a compiler (e.g. `apt install build-essentials`)
-* cmake
-* git
+* cmake (optional)
+* python
 * (linux) pkg-config (e.g. `apt install pkg-config`)
 * curl, zip, unzip, tar (e.g. `apt install curl zip unzip tar`)
 * ninja (e.g. `apt install ninja-build`)
+* meson (e.g., `pip install --user meson`)
+
+Unix users can also use a similar method to the Windows build environment as detailed below.
+
+On Windows, the following can be used:
+* install Visual Studio 2019 or 2022. Alternatively, MinGW-64 (installed via TDM-GCC 10) and Intel OneAPI c/c++ compilers are also known to work
+* install miniconda or python along with venv and setup virtual environment
+* pip install cmake (optional)
+* pip install ninja
+* pip install meson
 
 To build:
+* `meson setup builddir` Note, it is good practice to setup `--prefix` flags so files are not installed on the system.
+* `meson compile -C builddir`
 
-* `cmake -B build -S .`
-* `cmake --build build`
+Meson provides multiple build types such as debug, debugoptimized, and release. To change the build type, use the `--buildtype` flag. For example, `meson setup builddir --buildtype debugoptimized`.
 
 To run tests:
 
-* `cd build`
-* `ctest`
+* `meson test -C builddir'
 
-To change the build type, add `-DCMAKE_BUILD_TYPE` e.g.
-`cmake -DCMAKE_BUILD_TYPE=RelWithDebugInfo -B build -S .`.
+To get binaries:
+* `meson install -C builddir` if the prefix was set or
+* `meson install -C builddir --destdir <some directory>` to install in a specific directory.
 
-The binaries are located in the build directory:
+Sometimes you only want the runtime dynamic libraries and executables. Meson comes with a handy targeted installation using the following command:
+ * `meson install -C builddir --tags runtime`
 
-* build
-  * test -> *_test
+Make sure the prefix, or destdir, is set so binaries are not accidentally installed on the system.
+
+The binaries are located in the build or installation directory:
+
+Build directory:
+* builddir
   * examples
     * process
     * average_subtract
   * openpiv -> libopenpivcore.so
 
-### Raspberry Pi
+Install directory:
+* prefix/destdir
+  * bindir
+    * libopenpivcore.so
+    * all other dependent shared libraries
+    * process (executable)
+    * average_subtract (executable)
+
+### Raspberry Pi (using deprecated VCPKG build system)
 
 Build times are, as expected, much slower than on a modern Intel CPU, but the code
 will compile. Some observations:
@@ -164,23 +216,15 @@ sys     0m0.020s
 This is about 230us per interrogation area (7 cores, 3696 interrogation areas, 0.122s)
 
 ## Dependencies
-
-These are captured in `vcpkg.json`:
-
-* c++17 compiler e.g. clang++-5.0, gcc7
-* [vcpkg](https://github.com/Microsoft/vcpkg)
-  * catch2: unit test framework
-  * libtiff: TIFF IO support
+* c++17 compiler e.g. clang++-5.0, gcc8
+* python3
+* [meson](https://mesonbuild.com/index.html)
   * benchmark: used to run performance benchmarks
-  * async++ (optional): implements c++17 parallel algorithms
+  * catch2: unit test framework
   * cxxopts: nice command line parsing
-
-## Examples
-
-* under build/examples are two simple applications:
-  * [process](examples/process/README.md): a straight-forward PIV cross correlator
-  * [average_subtract](examples/average_subtract/README.md): a utility to read in n
-    images, find the average and write out n new images with the mean subtracted
+  * libtiff: TIFF IO support
+    * libjpeg-turbo
+    * zlib
 
 # TODO
 
@@ -200,6 +244,8 @@ These are captured in `vcpkg.json`:
     * [ ] memory map files - check performance for large files
     * [ ] PNG - lodepng
     * [ ] RAW - libraw looks less than ideal but no alternative?
+    * [ ] BMP - easyBMP?
+    * [ ] JPEG - already incl in libjpeg-turbo
     * [ ] b16/PCO
   * utilities
     * [x] split RGB to 4xgreyscale
@@ -219,12 +265,53 @@ These are captured in `vcpkg.json`:
     * [ ] apply kernel in Fourier space
     * [x] use SIMD?
     * [x] real -> complex FFT/correlation of real data
-  * [ ] direct correlation
+    * [ ] normalized minimum quadratic differences (very robust)
+    * [ ] zero pad images
+  * direct correlation
+    * [ ] full window correlation
+    * [ ] partial window correlation (for enhancing FFT correlations)
+    * [ ] use SIMD?
+  * image deformation
+    * [ ] shifted linear image deformation interpolation (same as first degree polynomial for my impl)
+    * [ ] polynomial interpolation (lookup tables-based, so super fast!!)
+    * [ ] sinc (lookup table-based, so also quite fast; only 7x7 and 11x11 kernels supported)
+    * [ ] lanczos (lookup table-based, so also quite fast; generally more stable than sinc)
   * [x] peak detection
-  * [x] peak fitting
+  * peak fitting
+    * [x] 3 point Gaussian peak fit
+    * [ ] 3 point parabolic peak fit
+    * [ ] 3 point centroid peak fit
+    * [ ] 3x3 least squares Gaussian peak fit (optimized via pseudo-inverse)
+    * [ ] nxn least squares Gaussian peak fit (optimized via pseudo-inverse)
+    * [ ] nxn non-linear Gaussian peak fit (optimized via Levenberg-Marquardt or something similar)
+    * [ ] nxn centroid peak fit (can be used for calibration marker detection)
+  * multi-pass PIV
+    * [x] First pass w/ multi-threading
+    * [ ] Multi-pass image deform w/ multi-threading
+    * [ ] Failed correlations can use larger correlation window or imputation
 * image processing
-  * [ ] change image_view to use array of pointers for each row?
-  * [ ] low/high pass filter
+  * filters
+    * [ ] change image_view to use array of pointers for each row?
+    * [ ] Gaussian low-pass filter
+    * [ ] Gaussian high-pass filter
+    * [ ] normalized variance filter
+    * [ ] contrast stretch filter (based on local percentile kernels)
+    * [ ] median filter
+    * [ ] min/max normalization filter
+    * [ ] smoothn from OpenPIV-Python (requires L-BFGS-B impl)
+  * adjustment
+    * [ ] crop (region of interest/ROI)
+    * [ ] skew
+    * [ ] stretch
+    * [ ] translate
+    * [ ] rotate
+    * [ ] flip (x or y axis)
+    * [ ] normalize (0..1 * scaling value)
+    * [ ] deform (Using same deformation algos in PIV image deformation)
+  * masking
+    * [ ] read mask image
+    * [ ] write mask image
+    * [ ] automatically create mask image
 * examples
   * [x] parallel cross-correlate
   * [x] image processing
@@ -242,7 +329,5 @@ These are captured in `vcpkg.json`:
   * [ ] ASCII/CSV
   * [ ] gnuplot/pyplot?
   * [ ] tecplot
-* GUI
-  * [ ] Qt?
-  * [ ] websockets/HTML5?
-  * [ ] webassembly + JS/HTML5?
+* interfacing
+  * [ ] nanobind (faster pybind11) for Python interfacing
