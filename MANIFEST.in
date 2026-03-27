@@ -1,8 +1,10 @@
 include README.md
 include LICENSE
 include piv_bindings.cpp
-recursive-include openpiv *.h *.cpp
-recursive-include external/pocketfft *.h *.hpp
+recursive-include openpiv *.h *.cpp *.cxx
+recursive-include external/pocketfft *.h
+recursive-include external/threading *.hpp
+recursive-include external/libtiff *.h *.hxx *.cxx
 include openpiv_cpp_pkg/*.py
 include openpiv_cpp_pkg/*.so
 include openpiv_cpp_pkg/*.pyd

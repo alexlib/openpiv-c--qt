@@ -16,92 +16,65 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # Linux x86_64
           - os: ubuntu-latest
             job_name_suffix: ""
-            macos_archs: ""
-            macos_environment: "MACOSX_DEPLOYMENT_TARGET=10.15"
+            cibw_archs: "x86_64"
+          # Linux aarch64
           - os: ubuntu-24.04-arm
             job_name_suffix: ""
-            macos_archs: ""
-            macos_environment: "MACOSX_DEPLOYMENT_TARGET=10.15"
+            cibw_archs: "aarch64"
+          # macOS arm64
           - os: macos-14
             job_name_suffix: " (arm64)"
-            macos_archs: "arm64"
-            macos_environment: "MACOSX_DEPLOYMENT_TARGET=10.15"
-          - os: macos-14
+            cibw_archs: "arm64"
+          # macOS x86_64
+          - os: macos-13
             job_name_suffix: " (x86_64)"
-            macos_archs: "x86_64"
-            macos_environment: "MACOSX_DEPLOYMENT_TARGET=10.15 TIFF_LIBRARY=$TIFF_LIBRARY TIFF_INCLUDE_DIR=$TIFF_INCLUDE_DIR LIBTIFF_LIBRARY=$LIBTIFF_LIBRARY LIBTIFF_INCLUDE_DIR=$LIBTIFF_INCLUDE_DIR"
+            cibw_archs: "x86_64"
+          # Windows AMD64
           - os: windows-latest
             job_name_suffix: ""
-            macos_archs: ""
-            macos_environment: "MACOSX_DEPLOYMENT_TARGET=10.15"
+            cibw_archs: "AMD64"
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set up QEMU (for aarch64 emulation)
+        if: runner.os == 'Linux' && matrix.cibw_archs == 'aarch64'
+        uses: docker/setup-qemu-action@v3
         with:
-          submodules: recursive
-
-      - name: Install Rosetta
-        if: runner.os == 'macOS' && matrix.macos_archs == 'x86_64'
-        run: sudo softwareupdate --install-rosetta --agree-to-license || true
-
-      - name: Install x86_64 Homebrew
-        if: runner.os == 'macOS' && matrix.macos_archs == 'x86_64'
-        run: |
-          if [ ! -x "/usr/local/bin/brew" ]; then
-            arch -x86_64 /bin/bash -c \
-              "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-          fi
-
-      - name: Install libtiff (x86_64)
-        if: runner.os == 'macOS' && matrix.macos_archs == 'x86_64'
-        run: arch -x86_64 /usr/local/bin/brew install libtiff
-
-      - name: Export libtiff paths
-        if: runner.os == 'macOS' && matrix.macos_archs == 'x86_64'
-        run: |
-          echo "TIFF_LIBRARY=/usr/local/lib/libtiff.dylib" >> "$GITHUB_ENV"
-          echo "TIFF_INCLUDE_DIR=/usr/local/include" >> "$GITHUB_ENV"
-          echo "LIBTIFF_LIBRARY=/usr/local/lib/libtiff.dylib" >> "$GITHUB_ENV"
-          echo "LIBTIFF_INCLUDE_DIR=/usr/local/include" >> "$GITHUB_ENV"
+          platforms: arm64
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.4.0
         env:
-          # Build CPython 3.8-3.13
-          CIBW_BUILD: "cp38-* cp39-* cp310-* cp311-* cp312-* cp313-*"
-          # Skip 32-bit, musllinux, and PyPy
+          CIBW_BUILD: "cp39-* cp310-* cp311-* cp312-* cp313-*"
           CIBW_SKIP: "*-win32 *-manylinux_i686 pp* *-musllinux*"
-          # macOS: build one architecture per matrix entry
-          CIBW_ARCHS_MACOS: ${{ matrix.macos_archs }}
-          # Set minimum macOS version
-          CIBW_ENVIRONMENT_MACOS: ${{ matrix.macos_environment }}
-          # Install dependencies before building
-          CIBW_BEFORE_ALL_MACOS: "brew update && brew install ninja cmake gcc pkg-config libtiff"
-          CIBW_BEFORE_ALL_LINUX: "yum install -y cmake ninja-build pkgconfig libtiff-devel libjpeg-devel zlib-devel"
-          # Windows: bootstrap vcpkg and install dependencies
-          CIBW_BEFORE_ALL_WINDOWS: "cmd /c external\\vcpkg\\bootstrap-vcpkg.bat -disableMetrics"
-          # Windows: set vcpkg toolchain for CMake
-          # CIBW_ENVIRONMENT_WINDOWS: "CMAKE_TOOLCHAIN_FILE=%GITHUB_WORKSPACE%\\external\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake;VCPKG_TARGET_TRIPLET=x64-windows"
-          CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}\external\vcpkg\scripts\buildsystems\vcpkg.cmake
-          VCPKG_TARGET_TRIPLET: x64-windows
-          # Test requirements
-          CIBW_TEST_REQUIRES: "pytest numpy"
-          # Test command
-          CIBW_TEST_COMMAND: "python -c \"from openpiv_cpp_pkg.openpiv_cpp import piv_process; print('OK')\""
-          # Skip testing on cross-compiled builds
-          CIBW_TEST_SKIP: "*-macosx_arm64 *-manylinux_aarch64"
-          # Show build progress
+          CIBW_ARCHS: ${{ matrix.cibw_archs }}
           CIBW_BUILD_VERBOSITY: "1"
 
       - uses: actions/upload-artifact@v4
         with:
-          name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
+          name: cibw-wheels-${{ matrix.os }}-${{ matrix.cibw_archs }}
           path: ./wheelhouse/*.whl
 
+  build_sdist:
+    name: Build source distribution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build sdist
+        run: pipx run build --sdist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cibw-sdist
+          path: dist/*.tar.gz
+
   upload_pypi:
-    needs: [build_wheels]
+    needs: [build_wheels, build_sdist]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
     environment:
@@ -113,7 +86,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          pattern: cibw-wheels-*
+          pattern: cibw-*
           merge-multiple: true
           path: dist
 
