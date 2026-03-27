@@ -56,7 +56,7 @@ openpiv_cpp_pkg = ["*.so", "*.dll", "*.dylib", "*.pyd"]
 # =============================================================================
 [tool.cibuildwheel]
 build = ["cp38-*", "cp39-*", "cp310-*", "cp311-*", "cp312-*", "cp313-*"]
-skip = ["*-win32", "*-manylinux_i686", "pp*", "*-musllinux*"]
+skip = ["*-win32", "*-manylinux_i686", "*-musllinux*"]
 build-frontend = "pip"
 test-requires = ["pytest", "numpy"]
 test-command = "python -c \"from openpiv_cpp_pkg.openpiv_cpp import piv_process; print('OK')\""
@@ -70,9 +70,7 @@ manylinux-x86_64-image = "manylinux2014"
 manylinux-aarch64-image = "manylinux2014"
 archs = ["x86_64", "aarch64"]
 
-before-all = [
-    "if command -v yum &> /dev/null; then yum install -y cmake ninja-build pkgconfig libtiff-devel libjpeg-devel zlib-devel; elif command -v apt-get &> /dev/null; then apt-get update && apt-get install -y cmake ninja-build pkg-config libtiff-dev libjpeg-dev zlib1g-dev; fi",
-]
+before-all = ["yum install -y cmake ninja-build pkgconfig libtiff-devel libjpeg-devel zlib-devel"]
 
 environment = { PIP_VERBOSE = "1" }
 repair-wheel-command = "auditwheel repair -w {dest_dir} {wheel}"
