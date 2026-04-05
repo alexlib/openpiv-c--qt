@@ -10,27 +10,19 @@ on:
 
 jobs:
   build_wheels:
-    name: Build wheels on ${{ matrix.os }}${{ matrix.job_name_suffix }}
+    name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          # Linux x86_64
           - os: ubuntu-latest
-            job_name_suffix: ""
             cibw_archs: "x86_64"
-          # Linux aarch64
           - os: ubuntu-24.04-arm
-            job_name_suffix: ""
             cibw_archs: "aarch64"
-          # macOS arm64
           - os: macos-14
-            job_name_suffix: " (arm64)"
             cibw_archs: "arm64"
-          # Windows AMD64
           - os: windows-latest
-            job_name_suffix: ""
             cibw_archs: "AMD64"
 
     steps:
@@ -45,7 +37,7 @@ jobs:
           platforms: arm64
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v3.4.0
+        uses: pypa/cibuildwheel@v3
         env:
           CIBW_BUILD: "cp39-* cp310-* cp311-* cp312-* cp313-*"
           CIBW_SKIP: "*-win32 *-manylinux_i686 *-musllinux*"
@@ -54,8 +46,9 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: cibw-wheels-${{ matrix.os }}-${{ matrix.cibw_archs }}
+          name: wheels-${{ matrix.os }}-${{ matrix.cibw_archs }}
           path: ./wheelhouse/*.whl
+          retention-days: 7
 
   build_sdist:
     name: Build source distribution
@@ -70,10 +63,11 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: cibw-sdist
+          name: sdist
           path: dist/*.tar.gz
+          retention-days: 7
 
-  upload_pypi:
+  publish:
     needs: [build_wheels, build_sdist]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
@@ -86,8 +80,13 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          pattern: cibw-*
+          pattern: wheels-*
           merge-multiple: true
+          path: dist
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: sdist
           path: dist
 
       - name: Publish to PyPI
