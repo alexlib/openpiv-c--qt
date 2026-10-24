@@ -20,3 +20,4 @@ build/
 /wheelhouse
 *.whl
 external/vcpkg/
+uv.lock
